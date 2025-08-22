@@ -4,7 +4,7 @@ import mediapipe as mp
 import math
 import time
 
-# Mediapipe initialization
+# Mediapipe setup
 mp_hands = mp.solutions.hands
 mp_draw = mp.solutions.drawing_utils
 hands = mp_hands.Hands(
@@ -16,37 +16,33 @@ hands = mp_hands.Hands(
 
 # Drawing canvas
 canvas = None
-
-# For smoothing strokes
-prev_points = {}
+prev_points = {}  # per hand
 
 # Colors
 colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 255, 255), (255, 255, 255)]
 color_index = 0
 brush_color = colors[color_index]
 
-# Brush settings
+# Brush/Eraser
 brush_thickness = 8
 eraser_thickness = 50
 
-# Cooldown for color change
+# Cooldown
 last_color_change = 0
-cooldown_time = 1.0  # seconds
+cooldown_time = 1.0
 
 # Webcam
 cap = cv2.VideoCapture(0)
 
 
 def fingers_up(hand_landmarks, w, h):
-    """Returns list: [index, middle, ring, pinky] → 1 if up, 0 if down"""
+    """Returns [index, middle, ring, pinky] -> 1 if up, 0 if down"""
     fingers = []
     tip_ids = [8, 12, 16, 20]
-
     for id in tip_ids:
         tip_y = hand_landmarks.landmark[id].y * h
         base_y = hand_landmarks.landmark[id - 2].y * h
         fingers.append(1 if tip_y < base_y else 0)
-
     return fingers
 
 
@@ -56,7 +52,7 @@ while cap.isOpened():
         break
 
     frame = cv2.flip(frame, 1)
-    h, w, c = frame.shape
+    h, w, _ = frame.shape
     if canvas is None:
         canvas = np.zeros((h, w, 3), dtype=np.uint8)
 
@@ -71,33 +67,31 @@ while cap.isOpened():
             y = int(handLms.landmark[8].y * h)
 
             finger_status = fingers_up(handLms, w, h)
-
-            # Hand ID for smoothing (track separately for each hand)
             hand_id = f"hand_{hand_idx}"
 
-            # === Gesture 1: Draw (only index up) ===
+            # === Draw (only index up) ===
             if finger_status == [1, 0, 0, 0]:
-                if hand_id not in prev_points:
-                    prev_points[hand_id] = (x, y)
-
-                prev_x, prev_y = prev_points[hand_id]
-
-                dist = math.hypot(x - prev_x, y - prev_y)
-                if dist < 50:  # prevent big jumps
-                    mid_x = (prev_x + x) // 2
-                    mid_y = (prev_y + y) // 2
-                    cv2.line(canvas, (prev_x, prev_y), (mid_x, mid_y), brush_color, brush_thickness)
-                    prev_points[hand_id] = (mid_x, mid_y)
+                if prev_points.get(hand_id) is not None:
+                    prev_x, prev_y = prev_points[hand_id]
+                    dist = math.hypot(x - prev_x, y - prev_y)
+                    if dist < 50:  # avoid sudden jumps
+                        mid_x = (prev_x + x) // 2
+                        mid_y = (prev_y + y) // 2
+                        cv2.line(canvas, (prev_x, prev_y), (mid_x, mid_y), brush_color, brush_thickness)
+                        prev_points[hand_id] = (mid_x, mid_y)
+                    else:
+                        prev_points[hand_id] = (x, y)
                 else:
                     prev_points[hand_id] = (x, y)
 
-            # === Gesture 2: Erase (index+middle+ring up) ===
+            # === Erase (index+middle+ring) ===
             elif finger_status == [1, 1, 1, 0]:
                 cv2.circle(canvas, (x, y), eraser_thickness, (0, 0, 0), -1)
                 prev_points[hand_id] = None
-                cv2.putText(frame, "Eraser", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
+                cv2.putText(frame, "Eraser", (10, 40),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 3)
 
-            # === Gesture 3: Change Color (V sign → index+middle up only) ===
+            # === Change Color (V sign: index+middle) ===
             elif finger_status == [1, 1, 0, 0]:
                 current_time = time.time()
                 if current_time - last_color_change > cooldown_time:
@@ -111,12 +105,17 @@ while cap.isOpened():
             else:
                 prev_points[hand_id] = None
 
-    # Merge drawing with live feed
+    # Merge canvas
     gray_canvas = cv2.cvtColor(canvas, cv2.COLOR_BGR2GRAY)
     _, inv = cv2.threshold(gray_canvas, 20, 255, cv2.THRESH_BINARY_INV)
     inv = cv2.cvtColor(inv, cv2.COLOR_GRAY2BGR)
     frame = cv2.bitwise_and(frame, inv)
     frame = cv2.bitwise_or(frame, canvas)
+
+    # Show current brush color
+    cv2.rectangle(frame, (10, h - 60), (60, h - 10), brush_color, -1)
+    cv2.putText(frame, "Brush", (70, h - 25),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, brush_color, 2)
 
     cv2.imshow("Gesture Drawing", frame)
 
