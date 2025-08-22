@@ -24,6 +24,41 @@ pip install opencv-python mediapipe numpy
 ```
 
 ## Usage
+<!-- Header -->
+<h1 align="center">🖌️ Hand Gesture Drawing with Mediapipe</h1>
+<p align="center">
+  Draw, Erase, and Change Colors using just your <b>Hand Gestures</b> captured via Webcam! <br>
+  Built with <code>OpenCV</code>, <code>Mediapipe</code>, and <code>Python</code>.
+</p>
+
+---
+
+## ✨ Features
+- ✍️ **Draw** on screen using your **index finger**.
+- 🧽 **Erase** with **index + middle + ring** fingers.
+- 🎨 **Change brush color** with a **V-sign (index + middle)**.
+- 🖼️ Save your artwork anytime by pressing **`S`**.
+- 🎥 Real-time hand tracking using **Mediapipe Hands**.
+
+---
+
+## 🎮 Gesture Controls
+
+| Gesture | Action |
+|---------|--------|
+| ☝️ (Index Finger Up) | Draw |
+| ✌️ (Index + Middle Up) | Change Brush Color |
+| 🤟 (Index + Middle + Ring Up) | Erase |
+| 💾 Press `S` | Save Drawing |
+| ❌ Press `ESC` | Exit |
+
+---
+## 🚀 Getting Started
+
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/your-username/gesture-drawing.git
+cd gesture-drawing
 
 Run the script:
 
@@ -50,5 +85,17 @@ python gesture_drawing.py
 - [gesture_drawing.py](gesture_drawing.py)
 
 ---
+2️⃣ Install Dependencies
+pip install opencv-python mediapipe numpy
+3️⃣ Run the Application
+python gesture_drawing.py
+
+💡 Future Improvements
+
+* Add shape drawing (circle, rectangle, line) with gestures.
+
+* Add gesture to change brush size.
+
+* Add undo/redo functionality.
 
 Inspired by gesture-based drawing applications using computer vision.
