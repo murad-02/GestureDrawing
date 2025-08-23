@@ -69,25 +69,17 @@ python gesture_drawing.py
 - Make sure your webcam is connected.
 - The drawing window will open.
 - Use gestures to draw, erase, and change colors as described above.
-
-## Controls
-
-| Gesture/Key         | Action                |
-|---------------------|-----------------------|
-| Index finger up     | Draw                  |
-| 3 fingers up        | Erase                 |
-| Thumb+Index pinch   | Change brush color    |
-| `s` key             | Save drawing as PNG   |
-| `ESC` key           | Exit application      |
-
 ## File
 
 - [gesture_drawing.py](gesture_drawing.py)
 
 ---
 2️⃣ Install Dependencies
+
 pip install opencv-python mediapipe numpy
-3️⃣ Run the Application
+
+3️⃣ Run the 
+
 python gesture_drawing.py
 
 💡 Future Improvements
